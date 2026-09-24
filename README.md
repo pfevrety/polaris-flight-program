@@ -91,7 +91,7 @@ To upload, connect the matching Teensy and run `pio run -e <target> -t upload`.
 
 ## Verification and contribution
 
-The GitHub Actions workflow builds both PlatformIO environments for pushes and pull requests. A successful build is not flight qualification: safety-critical changes should also be bench-tested, reviewed by peers, and checked against serial and SD logs.
+The GitHub Actions workflow builds both PlatformIO environments and runs host-side unit tests for the apogee detector on pushes and pull requests. A successful build or unit test is not flight qualification: safety-critical changes should also be bench-tested, reviewed by peers, and checked against serial and SD logs.
 
 ## Portfolio notes
 

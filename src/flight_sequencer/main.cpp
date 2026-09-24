@@ -4,6 +4,7 @@
 #include "LedController.h"
 #include "LedFeedback.h"
 #include "BuzzerManager.h"
+#include "ApogeeDetector.h"
 #include "Tridge.h"
 #include "ServoMot.h"
 #include "SdLogger.h"
@@ -28,6 +29,7 @@ FlightStatus state = {
 
 bool lastArmState = true;
 float initial_altitude;
+ApogeeDetector apogeeDetector;
 
 void transitionTo(FlightPhase newPhase);
 void runFlightStateMachine();
@@ -293,37 +295,8 @@ AccelData getFakeAccel()
  */
 bool checkApogee(float currentAltitude, float launchAltitude)
 {
-    static float maxAltitude = 0.0f;
-    static uint8_t dropCount = 0;
-    constexpr float APOGEE_DROP_THRESHOLD_M    = 3.0f;  ///< Drop of 3m from peak confirms descent
-    constexpr uint8_t CONSECUTIVE_DROPS_NEEDED = 5;     ///< Require 5 consecutive drops for noise rejection
-    constexpr uint32_t MIN_BURNOUT_LOCKOUT_MS  = 2500;  ///< Lockout duration during Pro98 motor burn (ms)
-
-    if (state.phase != FlightPhase::ASCENDING)
-    {
-        maxAltitude = 0.0f;
-        dropCount = 0;
-        return false;
-    }
-
-    if (millis() - state.flightStartTime < MIN_BURNOUT_LOCKOUT_MS)
-    {
-        return false;
-    }
-
-    float relativeAltitude = currentAltitude - launchAltitude;
-    if (relativeAltitude > maxAltitude)
-    {
-        maxAltitude = relativeAltitude;
-        dropCount = 0;
-    }
-    else if (relativeAltitude < (maxAltitude - APOGEE_DROP_THRESHOLD_M))
-    {
-        dropCount++;
-        if (dropCount >= CONSECUTIVE_DROPS_NEEDED)
-        {
-            return true;
-        }
-    }
-    return false;
+    return apogeeDetector.update(
+        currentAltitude,
+        launchAltitude,
+        millis() - state.flightStartTime);
 }
